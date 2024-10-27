@@ -1,0 +1,25 @@
+#+title: Readme
+* getting started
+C++ development environment with Boost and Catch2 has been created!
+
+To get started:
+1. Enter development shell:
+   nix develop
+
+2. Build the project:
+   mkdir build && cd build
+   cmake -G Ninja ..
+   ninja
+
+3. Run tests:
+   ninja test
+
+Available shells:
+- nix develop      (default, uses Clang)
+- nix develop .#gcc
+- nix develop .#clang
+
+To build the package:
+- nix build       (default, uses Clang)
+- nix build .#gcc
+- nix build .#clang
