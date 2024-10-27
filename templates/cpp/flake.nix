@@ -1,4 +1,3 @@
-
 {
   description = "C++ project template";
 
@@ -37,7 +36,7 @@
 
           balanced = [
             "-O2"
-            "-flto=thin"
+            # "-flto=thin" # check optimization options later
             "-march=native"
           ];
 
@@ -60,6 +59,7 @@
         commonBuildInputs = with pkgs; [
           boost
           catch2_3
+          gbenchmark
         ];
 
         commonNativeBuildInputs = with pkgs; [
@@ -80,6 +80,11 @@
                 linuxPackages.perf
                 hotspot
                 valgrind
+                hyperfine # For command-line benchmarking
+                kcachegrind # For callgrind visualization
+                flamegraph # For flame graph generation
+                tracy # For real-time profiling
+                gperftools # For CPU and heap profiling
               ]);
 
             nativeBuildInputs =
@@ -226,6 +231,7 @@
 
             installPhase = ''
               mkdir -p $out/bin
+              cp build/benchmarks $out/bin/benchmarks
               cp build/main $out/bin/${projectName}
             '';
 
