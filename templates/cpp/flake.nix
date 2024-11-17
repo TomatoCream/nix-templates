@@ -225,6 +225,8 @@
                 -DCMAKE_CXX_FLAGS="$CXXFLAGS"
             '';
 
+            # dontStrip = true;
+
             buildPhase = ''
               cmake --build build
             '';
