@@ -154,7 +154,7 @@
               # Generate initial compile_commands.json if it doesn't exist
               if [ ! -f compile_commands.json ]; then
                 echo "Generating initial compile_commands.json..."
-                cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+                cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPROJECT_NAME=${projectName}
                 ln -sf build/compile_commands.json .
               fi
 
