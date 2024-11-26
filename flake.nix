@@ -11,6 +11,10 @@
         path = ./templates/haskell;
         description = "haskell";
       };
+      python = {
+        path = ./templates/python;
+        description = "python";
+      };
 
       default = self.templates.cpp;
     };
