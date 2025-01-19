@@ -30,7 +30,6 @@
           extensions = [
             "rust-src"
             "rust-analyzer"
-            "lldb"
           ];
           targets = [ "x86_64-unknown-linux-gnu" ];
         };
