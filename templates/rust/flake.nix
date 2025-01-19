@@ -51,8 +51,39 @@
           rust-analyzer
         ];
 
+        # Define the Rust package build
+        rustPkg = pkgs.rustPlatform.buildRustPackage {
+          pname = "rust-project";
+          version = "0.1.0";
+
+          src = ./.; # Use the current directory as source
+
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+            allowBuiltinFetchGit = true;
+          };
+
+          buildInputs = with pkgs; [
+            # Add any runtime dependencies here
+          ];
+
+          nativeBuildInputs = with pkgs; [
+            rustToolchain
+            pkg-config
+          ];
+
+          # Enable debug symbols and other build flags
+          RUSTFLAGS = "-C target-cpu=native";
+
+          # Optional: add checkInputs for testing dependencies
+          checkInputs = with pkgs; [
+            # Add any test-only dependencies here
+          ];
+        };
+
       in
       {
+        # Development shell environment
         devShells.default = pkgs.mkShell {
           inherit nativeBuildInputs;
 
@@ -60,6 +91,12 @@
           RUST_BACKTRACE = 1;
           RUST_LOG = "debug";
           RUSTFLAGS = "-C target-cpu=native";
+        };
+
+        # Package output
+        packages = {
+          default = rustPkg;
+          rust-project = rustPkg;
         };
       }
     );
