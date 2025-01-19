@@ -1,11 +1,5 @@
 {
-  config,
-  lib,
-  pkgs,
-  ...
-}:
-{
-  description = "Zig development environment";
+  description = "Zig project template";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -31,68 +25,61 @@
           overlays = [ zig-overlay.overlays.default ];
         };
 
-        # Use latest stable Zig version
-        zigPkg = pkgs.zig-0_11_0;
+        zigPkg = pkgs.zig;
 
-        # Development shell configuration
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            # Zig compiler and tools
             zigPkg
-
-            # Build essentials
             gcc
             cmake
             gnumake
-
-            # Development tools
             gdb
             lldb
             valgrind
-
-            # Code analysis and formatting
-            zls # Zig Language Server
-            clang-tools # For clang-format
-
-            # Version control
+            zls
+            clang-tools
             git
-
-            # Documentation
             man
             man-pages
-
-            # Additional useful tools
             pkg-config
-            ccls # C/C++ language server (for C interop)
-            bear # For generating compilation database
+            ccls
+            bear
           ];
 
-          # Shell environment variables
           shellHook = ''
             export ZIG_PATH="${zigPkg}/lib/zig"
             export PATH="$PATH:$ZIG_PATH"
-
-            # Set up temporary directory for Zig cache
             export ZIG_GLOBAL_CACHE_DIR="$PWD/.cache/zig"
             mkdir -p $ZIG_GLOBAL_CACHE_DIR
-
-            # Configure editor integration
             export ZLS_PATH="${pkgs.zls}/bin/zls"
 
-            # Print environment info
             echo "Zig development environment loaded!"
             echo "Zig version: $(zig version)"
             echo "ZLS version: $(zls --version)"
           '';
         };
-
       in
       {
-        # Default development shell
         devShells.default = devShell;
-
-        # For backwards compatibility
         devShell = devShell;
+
+        # Add package definition
+        packages.default = pkgs.stdenv.mkDerivation {
+          pname = "zig-project";
+          version = "0.1.0";
+          src = ./template;
+
+          nativeBuildInputs = [ zigPkg ];
+
+          buildPhase = ''
+            zig build
+          '';
+
+          installPhase = ''
+            mkdir -p $out/bin
+            cp zig-out/bin/* $out/bin/
+          '';
+        };
       }
     );
 }
