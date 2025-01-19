@@ -1,0 +1,16 @@
+[package]
+name = "rust-project"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Add your dependencies here
+
+[profile.release]
+debug = true  # Enable debug symbols in release builds
+lto = "thin"  # Enable link-time optimization
+codegen-units = 1  # Maximize optimizations
+
+[profile.dev]
+debug = true
+opt-level = 0
