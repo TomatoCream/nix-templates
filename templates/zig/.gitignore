@@ -1,0 +1,47 @@
+# Zig build artifacts
+zig-cache/
+zig-out/
+release/
+debug/
+
+# Nix build artifacts
+result
+result-*
+.direnv/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+.cache/
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+
+# Logs and databases
+*.log
+*.sqlite
+
+# Local environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+*.lcov
