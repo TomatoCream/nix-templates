@@ -1,0 +1,34 @@
+#+TITLE: Project
+#+AUTHOR: AUTHOR_NAME
+
+* Project
+
+A Haskell project template.
+
+** Description
+
+A longer description of your project. You can use multiple lines here to explain what your project does.
+
+** Building
+
+#+begin_src shell
+cabal build
+#+end_src
+
+** Running
+
+#+begin_src shell
+cabal run project
+#+end_src
+
+** Testing
+
+#+begin_src shell
+cabal test
+#+end_src
+
+** Benchmarking
+
+#+begin_src shell
+cabal bench
+#+end_src 

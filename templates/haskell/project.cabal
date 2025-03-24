@@ -1,0 +1,125 @@
+name: project
+version: 0.1.0.0
+license: BSD3
+license-file: LICENSE
+copyright: (c) YEAR AUTHOR
+author: AUTHOR_NAME
+maintainer: AUTHOR_EMAIL
+bug-reports: mailto:AUTHOR_EMAIL
+stability: experimental
+homepage: https://github.com/USERNAME/project
+synopsis: Short description of your project
+description:
+  A longer description of your project.
+  You can use multiple lines here to explain what your project does.
+category: CATEGORY
+build-type: Simple
+cabal-version: >= 1.10
+tested-with: GHC == 9.6.6
+
+extra-source-files:
+  README.org
+  CHANGELOG.org
+  Setup.hs
+
+source-repository head
+  type:     git
+  location: https://github.com/USERNAME/project.git
+
+common common-options
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Widentities
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wpartial-fields
+    -Wredundant-constraints
+    -fhide-source-paths
+
+  default-extensions:
+    OverloadedStrings
+    LambdaCase
+    MultiWayIf
+    NamedFieldPuns
+    TupleSections
+    DeriveGeneric
+    DeriveFunctor
+    DeriveFoldable
+    DeriveTraversable
+    GeneralizedNewtypeDeriving
+    FlexibleContexts
+    FlexibleInstances
+    ScopedTypeVariables
+    TypeApplications
+    RecordWildCards
+
+library
+  import: common-options
+  hs-source-dirs: src
+  exposed-modules:
+    Lib
+  build-depends:
+    base >= 4.2 && < 5,
+    text >= 1.2 && < 3.0
+
+executable project
+  import: common-options
+  hs-source-dirs: app
+  main-is: Main.hs
+  build-depends:
+    base >= 4.2 && < 5,
+    project
+
+  if flag(threaded)
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
+
+test-suite project-test
+  import: common-options
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+  other-modules:
+    LibSpec
+  build-depends:
+    base >= 4.2 && < 5,
+    project,
+    hspec >= 2.7 && < 3,
+    QuickCheck >= 2.13 && < 3
+
+benchmark project-bench
+  import: common-options
+  type: exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is: Bench.hs
+  build-depends:
+    base >= 4.2 && < 5,
+    project,
+    criterion >= 1.5 && < 2
+  ghc-options:
+    -O2
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
+
+flag threaded
+  description: Build with threading support
+  default: False
+  manual: True
+
+flag optimized
+  description: Build with optimization
+  default: False
+  manual: True
+
+flag debug
+  description: Build with debug information
+  default: False
+  manual: True
+
+if flag(optimized)
+  ghc-options: -O2
+
+if flag(debug)
+  ghc-options: -g
