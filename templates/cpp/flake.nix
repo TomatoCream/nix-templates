@@ -106,92 +106,12 @@
 
             # Configure clangd
             shellHook = ''
-              # Generate .clangd configuration
-              cat > .clangd << EOF
-              CompileFlags:
-                Add: [
-                  -std=c++17,
-                  -Wall,
-                  -Wextra,
-                  -Wpedantic,
-                  -Wshadow,
-                  -Wformat=2,
-                  -Wconversion,
-                  -D_GLIBCXX_DEBUG
-                ]
-                Remove: [-W*pragma-once]
-
-              Diagnostics:
-                ClangTidy:
-                  Add: [
-                    performance-*,
-                    bugprone-*,
-                    modernize-*,
-                    cppcoreguidelines-*,
-                    readability-*
-                  ]
-                  Remove: [
-                    modernize-use-trailing-return-type,
-                    readability-braces-around-statements
-                  ]
-                  CheckOptions:
-                    readability-identifier-naming.VariableCase: camelBack
-                    readability-identifier-naming.FunctionCase: camelBack
-                    readability-identifier-naming.ClassCase: CamelCase
-
-              Index:
-                Background: Build
-
-              InlayHints:
-                Enabled: Yes
-                ParameterNames: Yes
-                DeducedTypes: Yes
-
-              Hover:
-                ShowAKA: Yes
-              EOF
-
               # Generate initial compile_commands.json if it doesn't exist
               if [ ! -f compile_commands.json ]; then
                 echo "Generating initial compile_commands.json..."
                 cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPROJECT_NAME=${projectName}
                 ln -sf build/compile_commands.json .
               fi
-
-              # Generate .clang-tidy configuration
-              cat > .clang-tidy << EOF
-              ---
-              Checks: >
-                *,
-                -fuchsia-*,
-                -google-*,
-                -zircon-*,
-                -abseil-*,
-                -modernize-use-trailing-return-type,
-                -llvm-*,
-                -llvmlibc-*
-              WarningsAsErrors: \'\'
-              HeaderFilterRegex: '.*'
-              AnalyzeTemporaryDtors: false
-              FormatStyle: none
-              CheckOptions:
-                - key: readability-identifier-naming.VariableCase
-                  value: camelBack
-                - key: readability-identifier-naming.FunctionCase
-                  value: camelBack
-                - key: readability-identifier-naming.ClassCase
-                  value: CamelCase
-              EOF
-
-              # Generate .clang-format
-              cat > .clang-format << EOF
-              ---
-              Language: Cpp
-              BasedOnStyle: Mozilla
-              IndentWidth: 2
-              ColumnLimit: 100
-              ---
-              EOF
             '';
           };
 
