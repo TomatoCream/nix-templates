@@ -53,7 +53,7 @@
                   ghcid = {}; # GHC-based development tool with continuous type checking
                   hoogle = {}; # Haskell API search engine
                   ormolu = {}; # Haskell code formatter
-                  stack = {}; # Alternative build tool
+                  # stack = {}; # Alternative build tool
                   ghc-prof-flamegraph = {}; # Profiling visualization
                 };
 

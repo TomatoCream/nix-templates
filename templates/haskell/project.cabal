@@ -54,6 +54,63 @@ common common-options
     ScopedTypeVariables
     TypeApplications
     RecordWildCards
+  build-depends: HTTP
+               , bytestring
+               , containers
+               , directory
+               , haskeline
+               , hspec
+               , mtl
+               , optparse-applicative
+               , parsec
+               , shake
+               , tasty
+               , tasty-golden
+               , text
+               , http2
+               , warp
+               , network
+               , aeson
+               , conduit
+               , persistent
+               , http-client
+               , ansi-terminal
+               , random
+               , lens
+               , unordered-containers
+               , yaml
+               , th-abstraction
+               , process
+               , directory
+               , wai-extra
+               , megaparsec
+               , streaming-commons
+               , mono-traversable
+               , optparse-applicative
+               , vector
+               , fast-logger
+               , http-conduit
+               , primitive
+               , filepath
+               , persistent-sqlite
+               , tar
+               , bifunctors
+               , semigroupoids
+               , binary
+               , attoparsec
+               , os-string
+               , bytestring
+               , containers
+               , conduit-extra
+               , unix
+               , yesod
+               , invariant
+               , zlib
+               , monad-logger
+               , reflection
+               , parsec
+               , time
+               , foldl
 
 library
   import: common-options
