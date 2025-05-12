@@ -7,6 +7,9 @@ result-*
 build/
 dist/
 
+# Clang
+.cache/
+
 # CMake
 CMakeLists.txt.user
 CMakeCache.txt
