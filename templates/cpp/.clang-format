@@ -1,0 +1,86 @@
+---
+# Based on LLVM style, but with some common adjustments for readability and modern C++
+Language: Cpp
+BasedOnStyle: LLVM
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+# Braces
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: false
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+# Spacing
+SpacesBeforeTrailingComments: 1
+Cpp11BracedListStyle: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false
+SpaceBeforeAssignmentOperators: true
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: true
+SpaceAfterCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceAfterInheritanceColon: true
+# Line Breaks and Wrapping
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+ColumnLimit: 100
+MaxEmptyLinesToKeep: 1
+FixNamespaceComments: true
+# Pointer and Reference Alignment
+PointerAlignment: Right
+ReferenceAlignment: Right
+# Comments
+CommentPragmas: '^ IWYU pragma:'
+# Control Statements
+AlignConsecutiveMacros: None
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+# Includes
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex:           '^<.*\.h>'
+    Priority:        1
+    SortPriority:    1
+  - Regex:           '^<.*>'
+    Priority:        2
+    SortPriority:    2
+  - Regex:           '.*' # All other includes
+    Priority:        3
+    SortPriority:    3
+IncludeIsMainRegex:  '(Impl\.h)?$'
+SortIncludes:        CaseSensitive
+# Other
+AlignEscapedNewlines: Right
+DerivePointerAlignment: false
+ContinuationIndentWidth: 4
+IndentPPDirectives: AfterHash
+ReflowComments: true
+# For C++20 and later, if you use concepts
+RequiresClausePosition: OwnLine
+# If you want to sort using declarations
+SortUsingDeclarations: true
+# Control how 'requires' clauses are formatted in concepts
+BreakBeforeConceptDeclarations: Always
+--- 

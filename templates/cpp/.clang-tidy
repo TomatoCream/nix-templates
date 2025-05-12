@@ -1,0 +1,147 @@
+---
+# This configuration enables a comprehensive set of checks for modern C++.
+# It aims for high code quality, performance, and readability.
+# Checks are grouped by category for modularity. Feel free to comment out
+# entire sections or individual checks as needed for your project.
+
+Checks: >
+  # Enable checks from Clang-Tidy modules by default.
+  # Start with a broad base, then refine.
+  -* # Disable all checks first
+  ,bugprone-*             # Potential bugs (often logic errors)
+  ,cert-*                # CERT C++ Secure Coding Standard rules (subset)
+  ,cppcoreguidelines-*     # C++ Core Guidelines checks
+  ,google-*              # Google C++ Style Guide checks (can be noisy, adjust as needed)
+  ,hicpp-*               # High Integrity C++ checks
+  ,llvm-*                # LLVM coding standards checks
+  ,misc-*                # Miscellaneous checks
+  ,modernize-*           # Checks for modernizing C++ code (C++11/14/17/20)
+  ,performance-*         # Performance-related checks
+  ,portability-*         # Portability issues
+  ,readability-*         # Readability improvements
+
+  # ----- Specific Check Configuration -----
+  # Disable specific checks if they are too noisy or conflict with project style:
+  # Example: disabling a specific google check
+  ,-google-build-using-namespace
+  # Example: disabling a specific modernize check if you prefer older syntax sometimes
+  ,-modernize-use-trailing-return-type
+  # Example: readability checks can be subjective
+  ,-readability-magic-numbers # Might be too strict for some projects
+  ,-readability-implicit-bool-conversion # Often useful, but can be disabled
+
+  # ----- Module-Specific Fine-tuning (Examples) -----
+  # Modernize module: Enforce specific modern features aggressively
+  ,modernize-use-auto               # Use auto type deduction
+  ,modernize-use-nullptr            # Prefer nullptr over NULL or 0
+  ,modernize-use-override           # Use override specifier
+  ,modernize-use-equals-default     # Use = default
+  ,modernize-use-equals-delete      # Use = delete
+  ,modernize-use-emplace            # Prefer emplace over push_back/insert with constructor call
+  ,modernize-use-using              # Prefer using over typedef
+  ,modernize-use-noexcept           # Recommend noexcept where applicable
+
+  # Performance module: Focus on common pitfalls
+  ,performance-faster-string-find
+  ,performance-for-range-copy       # Detect expensive copies in range-based for loops
+  ,performance-implicit-conversion-in-loop
+  ,performance-move-const-arg       # Detect potentially problematic std::move on const objects
+  ,performance-unnecessary-copy-initialization
+  ,performance-unnecessary-value-param
+
+  # Readability module: Enhance code clarity
+  ,readability-const-correctness    # Improve const usage
+  ,readability-container-size-empty # Prefer empty() over size() == 0
+  ,readability-delete-null-pointer  # Check for deleting null pointers (harmless but verbose)
+  ,readability-redundant-control-flow
+  ,readability-redundant-declaration
+  ,readability-redundant-smartptr-get
+  ,readability-redundant-string-cstr
+  ,readability-simplify-boolean-expr
+  ,readability-static-definition-in-anonymous-namespace # Prefer static or internal linkage
+  ,readability-string-compare       # Check for potentially incorrect string comparisons
+  ,readability-use-anyofallof       # Suggest std::any_of/std::all_of
+
+  # Bugprone module: Catch common errors
+  ,bugprone-argument-comment        # Find commented-out arguments
+  ,bugprone-assert-side-effect      # Assertions with side effects
+  ,bugprone-copy-constructor-init   # Ensure copy constructors initialize members
+  ,bugprone-incorrect-roundings     # Detect incorrect floating-point rounding
+  ,bugprone-integer-division        # Detect lossy integer division
+  ,bugprone-move-forwarding-reference # Check for incorrect use of std::move on forwarding references
+  ,bugprone-string-integer-assignment # Assigning integer literal to std::string
+  ,bugprone-suspicious-enum-usage
+  ,bugprone-suspicious-memset-usage
+  ,bugprone-suspicious-string-compare
+  ,bugprone-throw-keyword-missing   # Throwing temporaries
+  ,bugprone-undefined-memory-access
+  ,bugprone-use-after-move
+
+CheckOptions:
+  # ----- Global Options -----
+  # Set the C++ standard to ensure checks match your project
+  - key:             readability-redundant-smartptr-get.IgnoreMacros
+    value:           '0'
+  - key:             modernize-loop-convert.UseLoops
+    value:           '1'
+  - key:             modernize-loop-convert.MinConfidence
+    value:           'safe'
+  # Allow configuring the line length limit used by some checks
+  - key:             misc-files-within-dirs.MaximumLineLength
+    value:           '100' # Match .clang-format ColumnLimit
+  # Define naming conventions (example using LLVM style)
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.ClassCase
+    value:           'CamelCase'
+  - key:             readability-identifier-naming.StructCase
+    value:           'CamelCase'
+  - key:             readability-identifier-naming.UnionCase
+    value:           'CamelCase'
+  - key:             readability-identifier-naming.FunctionCase
+    value:           'camelBack'
+  - key:             readability-identifier-naming.VariableCase
+    value:           'camelBack'
+  - key:             readability-identifier-naming.ParameterCase
+    value:           'camelBack'
+  - key:             readability-identifier-naming.MemberCase
+    value:           'camelBack'
+  - key:             readability-identifier-naming.PublicMemberSuffix
+    value:           ''
+  - key:             readability-identifier-naming.PrivateMemberSuffix
+    value:           '_'
+  - key:             readability-identifier-naming.ProtectedMemberSuffix
+    value:           ''
+  - key:             readability-identifier-naming.EnumCase
+    value:           'CamelCase'
+  - key:             readability-identifier-naming.EnumConstantCase
+    value:           'UPPER_CASE'
+  - key:             readability-identifier-naming.ConstantCase
+    value:           'UPPER_CASE'
+  - key:             readability-identifier-naming.GlobalConstantCase
+    value:           'UPPER_CASE'
+  - key:             readability-identifier-naming.MacroDefinitionCase
+    value:           'UPPER_CASE'
+  - key:             readability-identifier-naming.IgnoreClassMemberPrefixes
+    value:           'm_, s_, k'
+  - key:             readability-identifier-naming.IgnoreVariablePrefixes
+    value:           'g_, k'
+  # Header guard style (can be 'llvm' or 'google')
+  - key:             llvm-header-guard.HeaderGuardStyle
+    value:           'llvm'
+
+# Specify Header Filter to limit checks mainly to your project's code
+# Adjust the regex as needed for your source/include layout.
+# This prevents clang-tidy from reporting issues in system or third-party headers.
+HeaderFilterRegex: '^(src|test|benchmark)/.*\.(h|hpp|hxx|cpp|cxx|cc)$'
+
+# Tell clang-tidy which standard to assume (e.g., c++11, c++14, c++17, c++20)
+# This should ideally match the standard set in your CMakeLists.txt
+# Example for C++17:
+# CompileFlags:
+#   Add: -std=c++17
+# Note: It's often better to let CMake manage compiler flags, including the standard.
+# Clang-tidy can often infer the standard from the compilation database (compile_commands.json)
+# generated by CMake. If you generate one, this might not be strictly necessary here.
+WarningsAsErrors: '' # Optionally treat specific warnings as errors, e.g., 'bugprone-*'
+--- 
