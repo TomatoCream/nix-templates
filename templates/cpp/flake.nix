@@ -18,6 +18,7 @@
         };
 
         projectName = "cpp-project";
+        buildDir = "build"; # Define build directory variable
 
         # Use LLVM's recursive set
         llvmSet = pkgs.llvmPackages_latest;
@@ -109,8 +110,8 @@
               # Generate initial compile_commands.json if it doesn't exist
               if [ ! -f compile_commands.json ]; then
                 echo "Generating initial compile_commands.json..."
-                cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPROJECT_NAME=${projectName}
-                ln -sf build/compile_commands.json .
+                cmake -B ${buildDir} -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPROJECT_NAME=${projectName}
+                ln -sf ${buildDir}/compile_commands.json .
               fi
             '';
           };
@@ -140,7 +141,7 @@
             CXXFLAGS = builtins.concatStringsSep " " (optimizationFlags.${optimizationLevel});
 
             configurePhase = ''
-              cmake -B build -G Ninja \
+              cmake -B ${buildDir} -G Ninja \
                 ''${cmakeFlags[@]} \
                 -DCMAKE_CXX_FLAGS="$CXXFLAGS"
             '';
@@ -148,13 +149,13 @@
             # dontStrip = true;
 
             buildPhase = ''
-              cmake --build build
+              cmake --build ${buildDir}
             '';
 
             installPhase = ''
               mkdir -p $out/bin
-              cp build/benchmarks $out/bin/benchmarks
-              cp build/main $out/bin/${projectName}
+              cp ${buildDir}/benchmarks $out/bin/benchmarks
+              cp ${buildDir}/main $out/bin/${projectName}
             '';
 
             meta = with pkgs.lib; {
