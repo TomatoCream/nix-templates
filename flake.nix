@@ -13,6 +13,10 @@
           path = ./templates/rust;
           description = "rust";
         };
+        rust-crane = {
+          path = ./templates/rust-crane;
+          description = "Rust project with rust-overlay and crane for fast incremental builds";
+        };
         zig = {
           path = ./templates/zig;
           description = "zig";

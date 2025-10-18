@@ -1,0 +1,16 @@
+# Rust
+/target
+# Note: Cargo.lock is NOT ignored because Nix builds require it
+
+# Nix
+/result
+/result-*
+.direnv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
