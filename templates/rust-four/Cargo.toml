@@ -1,0 +1,78 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.metadata.crane]
+name = "rrrr"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+repository = "https://github.com/yourusername/rrrr"
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Internal crates
+rrrr-lib = { path = "crates/rrrr-lib" }
+
+# Async runtime
+tokio = { version = "1", features = ["full", "tracing"] }
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# For tokio-console support
+console-subscriber = "0.4"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Testing
+proptest = "1"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+
+# Allow some pedantic lints that are too noisy
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+# Faster builds, still debuggable
+opt-level = 0
+debug = true
+
+[profile.dev.package."*"]
+# Optimize dependencies in dev mode for better perf
+opt-level = 2
+
+[profile.bench]
+lto = true
+codegen-units = 1
+

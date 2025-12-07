@@ -1,0 +1,54 @@
+# Copier template configuration
+# See: https://copier.readthedocs.io/
+_min_copier_version: "9.0.0"
+_subdirectory: template
+_skip_if_exists:
+  - Cargo.lock
+  - flake.lock
+# Questions for the user
+project_name:
+  type: str
+  help: "Project name (lowercase, hyphens allowed)"
+  default: my-rust-cli
+  validator: "{% if not project_name | regex_search('^[a-z][a-z0-9-]*$') %}Invalid name{% endif %}"
+project_description:
+  type: str
+  help: "Short description of the project"
+  default: "A blazing fast CLI application"
+author_name:
+  type: str
+  help: "Author name"
+  default: "Your Name"
+author_email:
+  type: str
+  help: "Author email"
+  default: "you@example.com"
+github_username:
+  type: str
+  help: "GitHub username (for repository URL)"
+  default: "yourusername"
+license:
+  type: str
+  help: "License"
+  choices:
+    - MIT
+    - Apache-2.0
+    - GPL-3.0
+    - BSD-3-Clause
+  default: MIT
+rust_version:
+  type: str
+  help: "Minimum Rust version"
+  default: "1.75"
+include_tokio_console:
+  type: bool
+  help: "Include tokio-console for async debugging?"
+  default: true
+include_benchmarks:
+  type: bool
+  help: "Include criterion benchmarks?"
+  default: true
+# Computed values (Jinja2)
+_project_snake: "{{ project_name | replace('-', '_') }}"
+_lib_name: "{{ project_name }}-lib"
+_lib_snake: "{{ _project_snake }}_lib"

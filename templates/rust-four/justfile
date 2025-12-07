@@ -1,0 +1,117 @@
+# justfile for rrrr
+# See: https://just.systems/
+
+# Default recipe - show available commands
+default:
+    @just --list
+
+# Build the project
+build:
+    cargo build --workspace
+
+# Build release version
+build-release:
+    cargo build --workspace --release
+
+# Run the CLI
+run *args:
+    cargo run -- {{args}}
+
+# Run tests
+test:
+    cargo test --workspace
+
+# Run tests with nextest
+nextest:
+    cargo nextest run --workspace
+
+# Run clippy
+clippy:
+    cargo clippy --workspace --all-targets -- -D warnings
+
+# Format code
+fmt:
+    treefmt
+
+# Check formatting
+fmt-check:
+    treefmt --fail-on-change
+
+# Run security audit
+audit:
+    cargo audit
+
+# Run cargo-deny checks
+deny:
+    cargo deny check
+
+# Generate coverage report
+coverage:
+    cargo llvm-cov --workspace --html
+    @echo "Coverage report: target/llvm-cov/html/index.html"
+
+# Generate coverage and open in browser
+coverage-open:
+    cargo llvm-cov --workspace --html --open
+
+# Run benchmarks
+bench:
+    cargo criterion --workspace
+
+# Generate documentation
+doc:
+    cargo doc --workspace --no-deps
+
+# Generate and open documentation
+doc-open:
+    cargo doc --workspace --no-deps --open
+
+# Generate flame graph (requires perf on Linux)
+flamegraph:
+    cargo flamegraph --bin rrrr -- demo
+
+# Run all checks (CI equivalent)
+ci: fmt-check clippy test audit deny doc
+
+# Clean build artifacts
+clean:
+    cargo clean
+    rm -rf result result-*
+
+# Watch for changes and run checks
+watch:
+    bacon
+
+# Start tokio-console (in another terminal, run with --console flag)
+console:
+    tokio-console
+
+# Start Rust REPL
+repl:
+    evcxr
+
+# Build Nix package
+nix-build:
+    nix build
+
+# Build Docker image
+docker-build:
+    nix build .#docker
+    @echo "Docker image: ./result"
+
+# Load Docker image
+docker-load:
+    docker load < result
+
+# Run all Nix checks
+nix-check:
+    nix flake check
+
+# Update flake inputs
+nix-update:
+    nix flake update
+
+# Enter dev shell (if not using direnv)
+nix-develop:
+    nix develop
+

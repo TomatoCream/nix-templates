@@ -1,0 +1,45 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+
+# Nix build results
+/result
+/result-*
+/.direnv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.envrc.local
+
+# Pre-commit config (managed by Nix)
+.pre-commit-config.yaml
+
+# Coverage reports
+*.profraw
+*.profdata
+lcov.info
+coverage/
+target/llvm-cov/
+
+# Benchmark results
+target/criterion/
+
+# Documentation build
+target/doc/
+
+# Flamegraph output
+flamegraph.svg
+perf.data
+perf.data.old

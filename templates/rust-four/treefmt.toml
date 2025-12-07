@@ -1,0 +1,39 @@
+# treefmt configuration
+# This file is used by treefmt standalone and as reference
+# The actual formatters are configured in nix/treefmt.nix
+
+[global]
+excludes = [
+    "*.lock",
+    "target/*",
+    "result",
+    "result-*",
+]
+
+[formatter.rust]
+command = "rustfmt"
+options = ["--edition", "2021"]
+includes = ["*.rs"]
+
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.toml]
+command = "taplo"
+options = ["format"]
+includes = ["*.toml"]
+
+[formatter.markdown]
+command = "mdformat"
+includes = ["*.md"]
+
+[formatter.shell]
+command = "shfmt"
+options = ["-i", "2", "-ci"]
+includes = ["*.sh", "*.bash"]
+
+[formatter.yaml]
+command = "yamlfmt"
+includes = ["*.yaml", "*.yml"]
+

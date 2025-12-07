@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/df/projects/rust-aeron/**)",
+      "Bash(nix flake check:*)",
+      "Bash(test:*)",
+      "Bash(git add:*)",
+      "Bash(nix flake show:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
