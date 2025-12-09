@@ -1,0 +1,10 @@
+# clang-tidy checks
+# Run: clang-tidy src/main.c (needs compile_commands.json, run `make bear` first)
+
+Checks: >
+  -*,
+  bugprone-*,
+  misc-*,
+  readability-*,
+  -readability-identifier-length
+

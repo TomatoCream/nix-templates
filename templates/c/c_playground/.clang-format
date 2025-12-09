@@ -1,0 +1,8 @@
+# Simple clang-format config
+# Run: clang-format -i src/*.c
+# Or just: treefmt
+
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+
