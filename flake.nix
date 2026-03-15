@@ -7,6 +7,10 @@
         path = ./templates/cpp;
         description = "C++ development environment with configurable compiler";
       };
+      cpp-reference = {
+        path = ./templates/cpp-reference;
+        description = "C++ reference project with Nix, Clang 21, CMake, and deep inspection tools";
+      };
       c_playground = {
         path = ./templates/c/c_playground;
         description = "simple C playground";

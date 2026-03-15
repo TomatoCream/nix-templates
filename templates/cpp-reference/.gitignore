@@ -1,0 +1,23 @@
+# Build artifacts
+build/
+bin/
+obj/
+out/
+result
+result-*
+
+# LSP / IDE
+.cache/
+.vscode/
+.idea/
+*.swp
+*~
+compile_commands.json
+
+# Nix / Direnv
+.direnv/
+.envrc.cache
+
+# OS-specific
+.DS_Store
+Thumbs.db
