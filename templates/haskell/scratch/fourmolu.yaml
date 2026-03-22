@@ -1,0 +1,108 @@
+# .fourmolu.yaml
+# Complete configuration for Fourmolu (v0.19+)
+# This file explicitly defines all settings to ensure project-wide consistency.
+
+# --- Core Layout ---
+
+# Number of spaces per indentation step. Matches your current Main.hs style.
+indentation: 2
+
+# Max line length for automatic line breaking. 100 is a modern standard for readability.
+column-limit: 100
+
+# Number of spaces between top-level declarations.
+newlines-between-decls: 1
+
+# Give the programmer more choice on where to insert blank lines (e.g., inside 'do' blocks).
+respectful: true
+
+
+# --- Styling ---
+
+# Styling of arrows in type signatures. 'trailing' is standard and helps with alignment.
+# Choices: trailing, leading, or leading-args
+function-arrows: trailing
+
+# How to place commas in multi-line lists, records, etc.
+# 'leading' (comma-first) is preferred for cleaner Git diffs.
+# Choices: leading or trailing
+comma-style: leading
+
+# Styling of import/export lists.
+# 'diff-friendly' ensures adding/removing items doesn't re-align the entire list.
+# Choices: leading, trailing, or diff-friendly
+import-export-style: diff-friendly
+
+# Styling of if-statements. 
+# 'hanging' keeps then/else compact and reduces vertical noise (Modern preference).
+# Choices: indented or hanging
+if-style: hanging
+
+# Styling of let blocks.
+# Choices: auto, inline, newline, or mixed
+let-style: auto
+
+# How to align the 'in' keyword with respect to the 'let' keyword.
+# Choices: left-align, right-align, or no-space
+in-style: right-align
+
+# Whether to leave a space before an opening record brace.
+record-brace-space: true
+
+# Whether to full-indent or half-indent 'where' bindings past the preceding body.
+# 'true' makes 'where' blocks more distinct.
+indent-wheres: true
+
+
+# --- Constraints & Derivations ---
+
+# Whether to put parentheses around a single constraint.
+# Choices: auto, always, or never
+single-constraint-parens: never
+
+# Whether to put parentheses around a single deriving class.
+# Choices: auto, always, or never
+single-deriving-parens: never
+
+# Keep things alphabetized to prevent style debates and cleaner diffs.
+sort-constraints: true
+sort-derived-classes: true
+sort-deriving-clauses: true
+
+
+# --- Documentation (Haddock) ---
+
+# How to print Haddock comments.
+# Choices: single-line, multi-line, or multi-line-compact
+haddock-style: multi-line
+
+# How to print module docstring.
+haddock-style-module: multi-line
+
+# Where to put docstring comments in function signatures.
+# 'leading' is clearer for multi-line type signatures.
+# Choices: auto, leading, or trailing
+haddock-location-signature: leading
+
+
+# --- Advanced / Compatibility ---
+
+# Rules for grouping import declarations.
+# 'legacy' is standard; 'preserve' keeps your manual groupings.
+import-grouping: legacy
+
+# Output Unicode syntax (e.g., replacement for ->). Keep 'never' for maximum compatibility.
+# Choices: detect, always, or never
+unicode: never
+
+# Whether to place section operators (e.g., $) in trailing position.
+trailing-section-operators: true
+
+# Fixity information for custom operators.
+fixities: []
+
+# Module reexports Fourmolu should know about.
+reexports: []
+
+# Modules defined by the current Cabal package for import grouping.
+local-modules: []

@@ -32,8 +32,12 @@
         description = "zig";
       };
       haskell = {
-        path = ./templates/haskell;
-        description = "haskell";
+        path = ./templates/haskell/basic;
+        description = "Basic Haskell template";
+      };
+      haskell-scratch = {
+        path = ./templates/haskell/scratch;
+        description = "Haskell project template with haskell.nix and kitted shell";
       };
       python = {
         path = ./templates/python;

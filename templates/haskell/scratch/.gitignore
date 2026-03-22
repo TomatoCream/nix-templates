@@ -1,0 +1,31 @@
+# --- Haskell/Cabal ---
+dist-newstyle/
+.ghc.environment.*
+cabal.project.local
+cabal.project.local.side
+cabal.project.res
+*.hp
+*.prof
+*.eventlog
+.hie
+
+# --- Nix ---
+result
+result-*
+.direnv/
+flake.lock
+
+# --- Editors/OS ---
+.vscode/
+.idea/
+.stack-work/
+*~
+*.swp
+.DS_Store
+.envrc.local
+
+# --- Project Specific ---
+bench/*.csv
+bench/*.html
+bench/*.svg
+test/*.log
