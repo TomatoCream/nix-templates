@@ -1,184 +1,124 @@
 {
-  description = "C++ project template";
+  description = "A C++ development environment with Boost and Clang/LLVM";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-  }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = import nixpkgs {
-          inherit system;
-        };
+  outputs = inputs @ {flake-parts, ...}:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
 
-        projectName = "cpp-project";
-        buildDir = "build"; # Define build directory variable
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
 
-        # Use LLVM's recursive set
-        llvmSet = pkgs.llvmPackages_latest;
-        defaultCompiler = llvmSet.clangUseLLVM;
-
-        # Optimization flags for different levels
-        optimizationFlags = {
-          performance = [
-            "-O3"
-            "-flto"
-            "-march=native"
-            "-ffast-math"
-            "-funroll-loops"
-            "-fomit-frame-pointer"
-          ];
-
-          balanced = [
-            "-O2"
-            # "-flto=thin" # check optimization options later
-            "-march=native"
-          ];
-
-          debug = [
-            "-O1"
-            "-fno-omit-frame-pointer"
-            "-fno-inline"
-            "-g3"
-            "-DDEBUG"
-          ];
-
-          size = [
-            "-Oz"
-            "-flto=thin"
-            "-ffunction-sections"
-            "-fdata-sections"
-          ];
-        };
-
-        commonBuildInputs = with pkgs; [
-          boost
-          catch2_3
-          gbenchmark
-        ];
-
-        commonNativeBuildInputs = with pkgs; [
-          cmake
-          ninja
-        ];
-
-        # Function to create a development shell with a specific compiler
-        mkDevShell = compiler:
-          pkgs.mkShell {
-            buildInputs =
-              commonBuildInputs
-              ++ (with pkgs; [
-                compiler
-                gdb
-                llvmSet.lldb
-                perf-tools
-                linuxPackages.perf
-                hotspot
-                valgrind
-                hyperfine # For command-line benchmarking
-                kcachegrind # For callgrind visualization
-                flamegraph # For flame graph generation
-                tracy # For real-time profiling
-                gperftools # For CPU and heap profiling
-              ]);
-
-            nativeBuildInputs =
-              commonNativeBuildInputs
-              ++ (with pkgs; [
-                llvmSet.libllvm
-                llvmSet.clang-tools # Provides clangd and clang-tidy
-
-                # Additional tools for development
-                bear # For generating compile_commands.json
-                ccache # For faster rebuilds
-                clang-analyzer # Static analyzer
-
-                # LSP and formatting tools
-                clang-tools # Provides clang-format
-                nodePackages.bash-language-server
-                cmake-language-server
-              ]);
-
-            # Configure clangd
-            shellHook = ''
-              # Generate initial compile_commands.json if it doesn't exist
-              if [ ! -f compile_commands.json ]; then
-                echo "Generating initial compile_commands.json..."
-                cmake -B ${buildDir} -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPROJECT_NAME=${projectName}
-                ln -sf ${buildDir}/compile_commands.json .
-              fi
-            '';
-          };
-
-        # Rest of the mkPackage and other definitions remain the same...
-        mkPackage = compiler: optimizationLevel:
-          pkgs.stdenv.mkDerivation {
-            pname = projectName;
+      perSystem = {
+        config,
+        self',
+        inputs',
+        pkgs,
+        system,
+        ...
+      }: let
+        # Helper function to create a build environment for either libc++ (default) or libstdc++
+        mkApp = {
+          name,
+          stdenv,
+          useLibcxx ? true,
+        }:
+          stdenv.mkDerivation {
+            pname = "cpp-reference-${name}";
             version = "0.1.0";
-
             src = ./.;
 
-            nativeBuildInputs =
-              commonNativeBuildInputs
-              ++ [
-                compiler
-              ];
+            nativeBuildInputs = with pkgs; [cmake ninja];
+            buildInputs = with pkgs; [boost];
 
-            buildInputs = commonBuildInputs;
+            cmakeFlags =
+              ["-GNinja"]
+              ++ (
+                if useLibcxx
+                then ["-DUSE_LIBCXX=ON"]
+                else ["-DUSE_LIBCXX=OFF"]
+              );
+          };
 
-            cmakeFlags = [
-              "-DCMAKE_BUILD_TYPE=Release"
-              "-DPROJECT_NAME=${projectName}"
-              "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+        # Helper function to create a devShell
+        mkShell = {
+          name,
+          package,
+          stdenv,
+        }:
+          pkgs.mkShell.override {inherit stdenv;} {
+            name = "cpp-dev-shell-${name}";
+            inputsFrom = [package];
+
+            packages = with pkgs; [
+              just
+              clang-tools # Includes clangd (LSP) and clang-format
+              lldb
+              nil
+              nixpkgs-fmt
+              mold        # High-performance linker
+              llvm        # Includes llvm-dis, llvm-nm, llvm-readelf, etc.
+              elfutils    # For readelf and other ELF utilities
             ];
 
-            CXXFLAGS = builtins.concatStringsSep " " (optimizationFlags.${optimizationLevel});
-
-            configurePhase = ''
-              cmake -B ${buildDir} -G Ninja \
-                ''${cmakeFlags[@]} \
-                -DCMAKE_CXX_FLAGS="$CXXFLAGS"
+            shellHook = ''
+              echo "Entering ${name} environment..."
+              echo "------------------------------------------------"
+              echo "Compiler: $(cc --version | head -n 1)"
+              echo "LSP:      $(clangd --version)"
+              echo "Standard Library: ${
+                if name == "libstdcxx"
+                then "GNU libstdc++"
+                else "LLVM libc++"
+              }"
+              echo "------------------------------------------------"
+              echo "Tip: Run 'just setup' to generate the LSP database."
             '';
-
-            # dontStrip = true;
-
-            buildPhase = ''
-              cmake --build ${buildDir}
-            '';
-
-            installPhase = ''
-              mkdir -p $out/bin
-              cp ${buildDir}/benchmarks $out/bin/benchmarks
-              cp ${buildDir}/main $out/bin/${projectName}
-            '';
-
-            meta = with pkgs.lib; {
-              description = "A C++ project with optimized builds";
-              platforms = platforms.unix;
-            };
           };
+
+        # Environments
+        gccEnv = pkgs.clangStdenv;
+        llvmEnv = pkgs.libcxxStdenv;
       in {
+        # Modular treefmt config
+        treefmt.config = import ./nix/treefmt.nix {inherit pkgs;};
+
+        # --- PACKAGES ---
         packages = {
-          default = mkPackage defaultCompiler "balanced";
-          performance = mkPackage defaultCompiler "performance";
-          balanced = mkPackage defaultCompiler "balanced";
-          debug = mkPackage defaultCompiler "debug";
-          size = mkPackage defaultCompiler "size";
-          gcc = mkPackage pkgs.gcc "balanced";
-          clang = mkPackage defaultCompiler "balanced";
+          # Default is now LLVM libc++
+          default = mkApp {
+            name = "libcxx";
+            stdenv = llvmEnv;
+            useLibcxx = true;
+          };
+          libstdcxx = mkApp {
+            name = "libstdcxx";
+            stdenv = gccEnv;
+            useLibcxx = false;
+          };
         };
 
+        # --- DEVELOPMENT SHELLS ---
         devShells = {
-          default = mkDevShell defaultCompiler;
-          gcc = mkDevShell pkgs.gcc;
-          clang = mkDevShell defaultCompiler;
+          # Default is now LLVM libc++
+          default = mkShell {
+            name = "libcxx";
+            package = self'.packages.default;
+            stdenv = llvmEnv;
+          };
+          libstdcxx = mkShell {
+            name = "libstdcxx";
+            package = self'.packages.libstdcxx;
+            stdenv = gccEnv;
+          };
         };
-      }
-    );
+      };
+    };
 }

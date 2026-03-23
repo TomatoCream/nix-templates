@@ -5,7 +5,7 @@
     templates = {
       cpp = {
         path = ./templates/cpp;
-        description = "C++ development environment with configurable compiler";
+        description = "C++ development environment with Nix, Clang 21, CMake, and deep inspection tools";
       };
       cpp-reference = {
         path = ./templates/cpp-reference;

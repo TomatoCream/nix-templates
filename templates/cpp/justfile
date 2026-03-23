@@ -1,0 +1,78 @@
+# Justfile for C++ development with Clang and Boost
+
+# Default: List all available recipes
+default:
+    @just --list
+
+# Setup: Configure CMake and generate the LSP database (compile_commands.json)
+setup:
+    cmake -B build -G Ninja
+
+# Build: Compile the project
+build:
+    cmake --build build
+
+# Run: Build and execute the application
+run: build
+    ./build/app
+
+# --- INSPECTION TOOLS ---
+
+# Standard flags for inspection
+FLAGS := "-std=c++23 -stdlib=libc++"
+
+# Compile: Generate object files (.o) without linking
+compile:
+    clang++ {{FLAGS}} -c src/main.cpp -o build/main.o
+
+# IR: Generate human-readable LLVM IR (.ll)
+ir:
+    clang++ {{FLAGS}} -S -emit-llvm src/main.cpp -o build/main.ll
+
+# AST: Dump the Clang Abstract Syntax Tree
+ast:
+    clang++ {{FLAGS}} -Xclang -ast-dump -fsyntax-only src/main.cpp
+
+# Dump: Save all intermediate files (preprocessed, bitcode, assembly, object)
+dump:
+    clang++ {{FLAGS}} -save-temps src/main.cpp -o build/app_temps
+
+# Bitcode: Generate LLVM bitcode (.bc) and then disassemble to text (.ll)
+bitcode:
+    clang++ {{FLAGS}} -c -emit-llvm src/main.cpp -o build/main.bc
+    llvm-dis build/main.bc -o build/main.dis.ll
+
+# Passes: See the IR after every optimization pass (outputs to stderr, redirected to file)
+passes:
+    clang++ {{FLAGS}} -O3 -mllvm -print-after-all src/main.cpp -o build/app_opt 2> build/passes.log
+    @echo "Optimization passes saved to build/passes.log"
+
+# Inspect ELF: Read the ELF header and section table
+inspect-elf: build
+    llvm-readelf -h -S build/app
+
+# Inspect Symbols: View demangled global symbols
+inspect-symbols: build
+    llvm-nm -gC build/app
+
+# Disassemble: Disassemble the binary with interleaved C++ source
+disasm: build
+    llvm-objdump -d -S --demangle build/app
+
+# Size: View section sizes in the binary
+size: build
+    llvm-size --format=sysv build/app
+
+# --- MAINTENANCE ---
+
+# Clean: Remove the build directory
+clean:
+    rm -rf build
+
+# Format: Run project-wide formatting (Nix and C++)
+fmt:
+    nix fmt
+
+# Test: Run tests (if you add them later)
+# test: build
+#     ctest --test-dir build
