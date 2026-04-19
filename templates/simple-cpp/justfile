@@ -1,0 +1,47 @@
+# Justfile for C++ Nix Project
+
+# Default recipe: build the project
+default: build
+
+# Configure CMake and generate compile_commands.json
+configure:
+    cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -GNinja
+
+# Build the project
+build: configure
+    cmake --build build
+
+# Run the application
+run: build
+    ./build/main
+
+# Explicitly regenerate LSP files (.clangd and symlink)
+# Note: This is also handled automatically by entering the nix shell
+lsp: configure
+    @if [ -f build/compile_commands.json ]; then \
+        ln -sf build/compile_commands.json compile_commands.json; \
+    fi
+    @./generate_clangd.sh
+
+# Clean build artifacts and generated LSP files
+clean:
+    rm -rf build src/main.o src/main.s
+    rm -f compile_commands.json .clangd
+
+# Generate unoptimized, commented assembly for inspection
+asm:
+    clang++ -S -O0 -fno-asynchronous-unwind-tables -fverbose-asm -std=c++20 src/main.cpp -o src/main.s
+    @echo "Assembly generated at src/main.s"
+
+# Compile to a standalone object file
+obj:
+    clang++ -c -O0 -std=c++20 src/main.cpp -o src/main.o
+    @echo "Object file generated at src/main.o"
+
+# Disassemble the object file with demangled C++ names
+disasm: obj
+    objdump -d -C -M intel src/main.o
+
+# List all symbols (functions/variables) in the object file
+symbols: obj
+    nm -C src/main.o
