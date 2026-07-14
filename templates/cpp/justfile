@@ -1,78 +1,47 @@
-# Justfile for C++ development with Clang and Boost
+# Justfile for C++ Nix Project
 
-# Default: List all available recipes
-default:
-    @just --list
+# Default recipe: build the project
+default: build
 
-# Setup: Configure CMake and generate the LSP database (compile_commands.json)
-setup:
-    cmake -B build -G Ninja
+# Configure CMake and generate compile_commands.json
+configure:
+    cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -GNinja
 
-# Build: Compile the project
-build:
+# Build the project
+build: configure
     cmake --build build
 
-# Run: Build and execute the application
+# Run the application
 run: build
-    ./build/app
+    ./build/main
 
-# --- INSPECTION TOOLS ---
+# Explicitly regenerate LSP files (.clangd and symlink)
+# Note: This is also handled automatically by entering the nix shell
+lsp: configure
+    @if [ -f build/compile_commands.json ]; then \
+        ln -sf build/compile_commands.json compile_commands.json; \
+    fi
+    @./generate_clangd.sh
 
-# Standard flags for inspection
-FLAGS := "-std=c++23 -stdlib=libc++"
-
-# Compile: Generate object files (.o) without linking
-compile:
-    clang++ {{FLAGS}} -c src/main.cpp -o build/main.o
-
-# IR: Generate human-readable LLVM IR (.ll)
-ir:
-    clang++ {{FLAGS}} -S -emit-llvm src/main.cpp -o build/main.ll
-
-# AST: Dump the Clang Abstract Syntax Tree
-ast:
-    clang++ {{FLAGS}} -Xclang -ast-dump -fsyntax-only src/main.cpp
-
-# Dump: Save all intermediate files (preprocessed, bitcode, assembly, object)
-dump:
-    clang++ {{FLAGS}} -save-temps src/main.cpp -o build/app_temps
-
-# Bitcode: Generate LLVM bitcode (.bc) and then disassemble to text (.ll)
-bitcode:
-    clang++ {{FLAGS}} -c -emit-llvm src/main.cpp -o build/main.bc
-    llvm-dis build/main.bc -o build/main.dis.ll
-
-# Passes: See the IR after every optimization pass (outputs to stderr, redirected to file)
-passes:
-    clang++ {{FLAGS}} -O3 -mllvm -print-after-all src/main.cpp -o build/app_opt 2> build/passes.log
-    @echo "Optimization passes saved to build/passes.log"
-
-# Inspect ELF: Read the ELF header and section table
-inspect-elf: build
-    llvm-readelf -h -S build/app
-
-# Inspect Symbols: View demangled global symbols
-inspect-symbols: build
-    llvm-nm -gC build/app
-
-# Disassemble: Disassemble the binary with interleaved C++ source
-disasm: build
-    llvm-objdump -d -S --demangle build/app
-
-# Size: View section sizes in the binary
-size: build
-    llvm-size --format=sysv build/app
-
-# --- MAINTENANCE ---
-
-# Clean: Remove the build directory
+# Clean build artifacts and generated LSP files
 clean:
-    rm -rf build
+    rm -rf build src/main.o src/main.s
+    rm -f compile_commands.json .clangd
 
-# Format: Run project-wide formatting (Nix and C++)
-fmt:
-    nix fmt
+# Generate unoptimized, commented assembly for inspection
+asm:
+    clang++ -S -O0 -fno-asynchronous-unwind-tables -fverbose-asm -std=c++20 src/main.cpp -o src/main.s
+    @echo "Assembly generated at src/main.s"
 
-# Test: Run tests (if you add them later)
-# test: build
-#     ctest --test-dir build
+# Compile to a standalone object file
+obj:
+    clang++ -c -O0 -std=c++20 src/main.cpp -o src/main.o
+    @echo "Object file generated at src/main.o"
+
+# Disassemble the object file with demangled C++ names
+disasm: obj
+    objdump -d -C -M intel src/main.o
+
+# List all symbols (functions/variables) in the object file
+symbols: obj
+    nm -C src/main.o

@@ -1,124 +1,141 @@
 {
-  description = "A C++ development environment with Boost and Clang/LLVM";
+  description = "A best-in-class C++ development environment template";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
-    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    systems.url = "github:nix-systems/default";
   };
 
-  outputs = inputs @ {flake-parts, ...}:
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
+  outputs =
+    inputs@{ self
+    , flake-parts
+    , ...
+    }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = import inputs.systems;
 
       imports = [
         inputs.treefmt-nix.flakeModule
       ];
 
-      perSystem = {
-        config,
-        self',
-        inputs',
-        pkgs,
-        system,
-        ...
-      }: let
-        # Helper function to create a build environment for either libc++ (default) or libstdc++
-        mkApp = {
-          name,
-          stdenv,
-          useLibcxx ? true,
+      perSystem =
+        { config
+        , self'
+        , pkgs
+        , ...
         }:
-          stdenv.mkDerivation {
-            pname = "cpp-reference-${name}";
+        let
+          # --- Configuration ---
+          # Available versions: llvmPackages_16, llvmPackages_17, llvmPackages_18, llvmPackages_19, etc.
+          llvmVersion = "llvmPackages_21";
+          llvmPkgs = pkgs.${llvmVersion};
+
+          # Use the selected LLVM version's stdenv (explicitly libc++ version)
+          stdenv = llvmPkgs.libcxxStdenv;
+
+          # Build-time dependencies
+          nativeBuildInputs = with pkgs; [
+            cmake
+            ninja
+            pkg-config
+            mold
+            llvmPkgs.libcxxClang
+          ];
+
+          # Run-time dependencies
+          buildInputs = with pkgs; [
+            # Add libraries here
+            llvmPkgs.libcxx
+          ];
+        in
+        {
+          # Formatting configuration
+          treefmt = {
+            projectRootFile = "flake.nix";
+            programs = {
+              nixpkgs-fmt.enable = true;
+              clang-format.enable = true;
+              cmake-format.enable = true;
+            };
+          };
+
+          # Main package definition
+          packages.default = stdenv.mkDerivation {
+            pname = "cpp-project-template";
             version = "0.1.0";
             src = ./.;
 
-            nativeBuildInputs = with pkgs; [cmake ninja];
-            buildInputs = with pkgs; [boost];
+            inherit nativeBuildInputs buildInputs;
 
-            cmakeFlags =
-              ["-GNinja"]
-              ++ (
-                if useLibcxx
-                then ["-DUSE_LIBCXX=ON"]
-                else ["-DUSE_LIBCXX=OFF"]
-              );
+            # Configure CMake to use Ninja and Mold
+            cmakeFlags = [
+              "-GNinja"
+              "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold"
+              "-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=mold"
+            ];
           };
 
-        # Helper function to create a devShell
-        mkShell = {
-          name,
-          package,
-          stdenv,
-        }:
-          pkgs.mkShell.override {inherit stdenv;} {
-            name = "cpp-dev-shell-${name}";
-            inputsFrom = [package];
+          # Development shell
+          devShells.default = pkgs.mkShell.override { inherit stdenv; } {
+            inputsFrom = [ self'.packages.default ];
 
             packages = with pkgs; [
-              just
-              clang-tools # Includes clangd (LSP) and clang-format
+              # LSPs and tooling
+              llvmPkgs.clang
+              llvmPkgs.libcxxClang
+              llvmPkgs.llvm
+              llvmPkgs.clang-tools # Includes clangd matching our LLVM version
+              cmake-language-server
+              bear # For generating compile_commands.json if CMake fails to
+              gdb
               lldb
-              nil
-              nixpkgs-fmt
-              mold        # High-performance linker
-              llvm        # Includes llvm-dis, llvm-nm, llvm-readelf, etc.
-              elfutils    # For readelf and other ELF utilities
+              pahole
+              valgrind
+              just
             ];
 
             shellHook = ''
-              echo "Entering ${name} environment..."
-              echo "------------------------------------------------"
-              echo "Compiler: $(cc --version | head -n 1)"
-              echo "LSP:      $(clangd --version)"
-              echo "Standard Library: ${
-                if name == "libstdcxx"
-                then "GNU libstdc++"
-                else "LLVM libc++"
-              }"
-              echo "------------------------------------------------"
-              echo "Tip: Run 'just setup' to generate the LSP database."
+              echo "--- C++ Development Environment ---"
+              echo "Compiler: $(clang --version | head -n1)"
+              echo "Linker: $(mold --version | head -n1)"
+
+              # Install pre-commit hook to run nix fmt
+              mkdir -p .git/hooks
+              cat <<EOF > .git/hooks/pre-commit
+              #!/bin/sh
+              nix fmt
+              EOF
+              chmod +x .git/hooks/pre-commit
+
+              # Export flags for tools that don't pick up the stdenv automatically
+              export CC=clang
+              export CXX=clang++
+
+              # Generate .clangd to help LSPs find Nix store paths
+              ./generate_clangd.sh
+
+              # Symlink compile_commands.json if it exists in build directory
+              if [ -f build/compile_commands.json ] && [ ! -f compile_commands.json ]; then
+                ln -s build/compile_commands.json .
+              fi
+
+              # Advice for LSP support
+              if [ ! -f compile_commands.json ] && [ ! -d build ]; then
+                echo "Tip: Run 'cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON' to generate LSP data."
+              fi
             '';
+
+            # Ensure mold is used in the shell environment
+            LD_FLAGS = "-fuse-ld=mold";
           };
 
-        # Environments
-        gccEnv = pkgs.clangStdenv;
-        llvmEnv = pkgs.libcxxStdenv;
-      in {
-        # Modular treefmt config
-        treefmt.config = import ./nix/treefmt.nix {inherit pkgs;};
-
-        # --- PACKAGES ---
-        packages = {
-          # Default is now LLVM libc++
-          default = mkApp {
-            name = "libcxx";
-            stdenv = llvmEnv;
-            useLibcxx = true;
-          };
-          libstdcxx = mkApp {
-            name = "libstdcxx";
-            stdenv = gccEnv;
-            useLibcxx = false;
+          # Check for CI
+          checks = {
+            formatting = config.treefmt.build.check self;
+            build = self'.packages.default;
           };
         };
-
-        # --- DEVELOPMENT SHELLS ---
-        devShells = {
-          # Default is now LLVM libc++
-          default = mkShell {
-            name = "libcxx";
-            package = self'.packages.default;
-            stdenv = llvmEnv;
-          };
-          libstdcxx = mkShell {
-            name = "libstdcxx";
-            package = self'.packages.libstdcxx;
-            stdenv = gccEnv;
-          };
-        };
-      };
     };
 }

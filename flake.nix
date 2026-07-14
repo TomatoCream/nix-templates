@@ -41,6 +41,10 @@
           path = ./templates/haskell/scratch;
           description = "Haskell project template with haskell.nix and kitted shell";
         };
+        haskell-four = {
+          path = ./templates/haskell/four;
+          description = "Haskell project with haskell.nix, flake-parts, treefmt-nix, GHC 9.12, HLS, and just";
+        };
         python = {
           path = ./templates/python;
           description = "python";
