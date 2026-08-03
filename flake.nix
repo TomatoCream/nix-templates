@@ -19,14 +19,6 @@
         };
         rust = {
           path = ./templates/rust;
-          description = "rust";
-        };
-        rust-crane = {
-          path = ./templates/rust-crane;
-          description = "Rust project with rust-overlay and crane for fast incremental builds";
-        };
-        rust-four = {
-          path = ./templates/rust-four;
           description = "Rust project with flake-parts, fenix, crane, treefmt, pre-commit";
         };
         zig = {

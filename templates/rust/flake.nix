@@ -1,102 +1,75 @@
 {
-  description = "Comprehensive Rust development environment";
+  description = "rrrr - A Rust CLI application with comprehensive Nix tooling";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    fenix = {
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    flake-utils.url = "github:numtide/flake-utils";
+
+    crane.url = "github:ipetkov/crane";
+
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
+
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    pre-commit-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      rust-overlay,
-      flake-utils,
-      ...
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs {
-          inherit system overlays;
-        };
+    inputs@{ flake-parts, self, ... }:
+    flake-parts.lib.mkFlake { inherit inputs self; } {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
 
-        rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-          extensions = [
-            "rust-src"
-            "rust-analyzer"
-          ];
-          targets = [ "x86_64-unknown-linux-gnu" ];
-        };
+      imports = [
+        inputs.treefmt-nix.flakeModule
+        inputs.pre-commit-hooks.flakeModule
+        ./nix/rust.nix
+        ./nix/packages.nix
+        ./nix/checks.nix
+        ./nix/devshell.nix
+        ./nix/docker.nix
+        ./nix/treefmt.nix
+      ];
 
-        nativeBuildInputs = with pkgs; [
-          rustToolchain
-          lldb
-          gdb
-          valgrind
-          llvm
-          clang
-          cmake
-          pkg-config
-          cargo-asm
-          cargo-expand
-          cargo-llvm-cov
-          cargo-watch
-          rust-analyzer
-        ];
-
-        # Define the Rust package build
-        rustPkg = pkgs.rustPlatform.buildRustPackage {
-          pname = "rust-project";
-          version = "0.1.0";
-
-          src = ./.; # Use the current directory as source
-
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-            allowBuiltinFetchGit = true;
+      perSystem =
+        { system, ... }:
+        {
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system;
+            overlays = [ inputs.fenix.overlays.default ];
           };
-
-          buildInputs = with pkgs; [
-            # Add any runtime dependencies here
-          ];
-
-          nativeBuildInputs = with pkgs; [
-            rustToolchain
-            pkg-config
-          ];
-
-          # Enable debug symbols and other build flags
-          RUSTFLAGS = "-C target-cpu=native";
-
-          # Optional: add checkInputs for testing dependencies
-          checkInputs = with pkgs; [
-            # Add any test-only dependencies here
-          ];
         };
 
-      in
-      {
-        # Development shell environment
-        devShells.default = pkgs.mkShell {
-          inherit nativeBuildInputs;
-
-          RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
-          RUST_BACKTRACE = 1;
-          RUST_LOG = "debug";
-          RUSTFLAGS = "-C target-cpu=native";
+      # Flake templates
+      flake.templates = {
+        default = {
+          path = ./.;
+          description = "Comprehensive Nix Rust development environment with fenix, crane, and full tooling";
         };
 
-        # Package output
-        packages = {
-          default = rustPkg;
-          rust-project = rustPkg;
+        rust-nix = {
+          path = ./.;
+          description = "Rust + Nix template with flake-parts, fenix, crane, treefmt, pre-commit";
         };
-      }
-    );
+      };
+    };
 }
