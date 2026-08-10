@@ -1,117 +1,71 @@
-# justfile for rrrr
-# See: https://just.systems/
+# justfile — task runner. See: https://just.systems/
+# Available via `nix develop` (or install `just` yourself).
 
-# Default recipe - show available commands
 default:
     @just --list
 
-# Build the project
+# --- cargo ---
+
 build:
-    cargo build --workspace
+    cargo build
 
-# Build release version
 build-release:
-    cargo build --workspace --release
+    cargo build --release
 
-# Run the CLI
 run *args:
-    cargo run -- {{args}}
+    cargo run -- {{ args }}
 
-# Run tests
 test:
-    cargo test --workspace
+    cargo test
 
-# Run tests with nextest
-nextest:
-    cargo nextest run --workspace
+bench:
+    cargo bench
 
-# Run clippy
 clippy:
-    cargo clippy --workspace --all-targets -- -D warnings
+    cargo clippy --all-targets -- --deny warnings
 
-# Format code
 fmt:
-    treefmt
+    nix fmt
 
-# Check formatting
 fmt-check:
-    treefmt --fail-on-change
+    nix fmt -- --fail-on-change
 
-# Run security audit
 audit:
     cargo audit
 
-# Run cargo-deny checks
-deny:
-    cargo deny check
-
-# Generate coverage report
-coverage:
-    cargo llvm-cov --workspace --html
-    @echo "Coverage report: target/llvm-cov/html/index.html"
-
-# Generate coverage and open in browser
-coverage-open:
-    cargo llvm-cov --workspace --html --open
-
-# Run benchmarks
-bench:
-    cargo criterion --workspace
-
-# Generate documentation
 doc:
-    cargo doc --workspace --no-deps
+    cargo doc --no-deps
 
-# Generate and open documentation
 doc-open:
-    cargo doc --workspace --no-deps --open
+    cargo doc --no-deps --open
 
-# Generate flame graph (requires perf on Linux)
-flamegraph:
-    cargo flamegraph --bin rrrr -- demo
+# Everything nix flake check runs, but via cargo for a faster local loop
+ci: fmt-check clippy test audit doc
 
-# Run all checks (CI equivalent)
-ci: fmt-check clippy test audit deny doc
-
-# Clean build artifacts
 clean:
     cargo clean
     rm -rf result result-*
 
-# Watch for changes and run checks
+# Background code checker (bacon)
 watch:
     bacon
 
-# Start tokio-console (in another terminal, run with --console flag)
-console:
-    tokio-console
+# --- nix ---
 
-# Start Rust REPL
-repl:
-    evcxr
-
-# Build Nix package
 nix-build:
     nix build
 
-# Build Docker image
-docker-build:
-    nix build .#docker
-    @echo "Docker image: ./result"
-
-# Load Docker image
-docker-load:
-    docker load < result
-
-# Run all Nix checks
 nix-check:
     nix flake check
 
-# Update flake inputs
-nix-update:
-    nix flake update
-
-# Enter dev shell (if not using direnv)
 nix-develop:
     nix develop
 
+nix-update:
+    nix flake update
+
+# --- template ---
+
+# Rename the "rust_template" placeholder to <name> (snake_case)
+rename name:
+    ./scripts/rename-project.sh {{ name }}

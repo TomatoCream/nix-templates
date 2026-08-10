@@ -1,71 +1,103 @@
-# Rust toolchain configuration using fenix
-{ inputs, ... }:
+# Shared Rust build environment: toolchain, craneLib, source filtering,
+# and cached dependency artifacts. Consumed by both the package build
+# (nix/package.nix, implicit below) and the dev shell (nix/devshell.nix)
+# so the two stay close to identical.
 {
-  perSystem =
-    { pkgs, ... }:
-    let
-      # Stable toolchain for general development and builds
-      stableToolchain = pkgs.fenix.stable.withComponents [
-        "cargo"
-        "clippy"
-        "rust-src"
-        "rustc"
-        "rustfmt"
-        "rust-analyzer"
-      ];
+  inputs,
+  pkgs,
+  system,
+  lib,
+}:
+let
+  fenixPkgs = inputs.fenix.packages.${system};
 
-      # Nightly toolchain specifically for llvm-cov (requires nightly)
-      nightlyToolchain = pkgs.fenix.complete.withComponents [
-        "cargo"
-        "llvm-tools-preview"
-        "rustc"
-      ];
+  rustToolchain = fenixPkgs.stable.withComponents [
+    "cargo"
+    "clippy"
+    "llvm-tools"
+    "rust-analyzer"
+    "rust-src"
+    "rustc"
+    "rustfmt"
+  ];
 
-      # Combined toolchain for coverage (nightly with llvm-tools)
-      coverageToolchain = pkgs.fenix.combine [
-        nightlyToolchain
-      ];
+  craneLib = (inputs.crane.mkLib pkgs).overrideToolchain (_: rustToolchain);
 
-      # Crane library configured with stable toolchain
-      craneLib = (inputs.crane.mkLib pkgs).overrideToolchain stableToolchain;
+  src = craneLib.cleanCargoSource ./..;
 
-      # Crane library configured for coverage (nightly)
-      craneLibNightly = (inputs.crane.mkLib pkgs).overrideToolchain coverageToolchain;
+  commonArgs = {
+    inherit src;
+    strictDeps = true;
 
-      # Common source filtering (use flake's self reference)
-      src = craneLib.cleanCargoSource inputs.self;
+    nativeBuildInputs = [
+      pkgs.pkg-config
+    ]
+    ++ lib.optionals pkgs.stdenv.isLinux [
+      pkgs.clang
+      pkgs.mold
+    ];
 
-      # Common arguments for all crate builds
-      commonArgs = {
-        inherit src;
-        strictDeps = true;
+    buildInputs = lib.optionals pkgs.stdenv.isDarwin [
+      pkgs.libiconv
+      pkgs.darwin.apple_sdk.frameworks.Security
+      pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+    ];
+  };
 
-        buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin [
-          pkgs.libiconv
-          pkgs.darwin.apple_sdk.frameworks.Security
-          pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-        ];
+  # Built once, reused by the package build, clippy, doc, and nextest —
+  # this is what makes incremental rebuilds fast under crane.
+  cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-        nativeBuildInputs = with pkgs; [
-          pkg-config
-        ];
-      };
+  package = craneLib.buildPackage (
+    commonArgs
+    // {
+      inherit cargoArtifacts;
+      pname = "rust_template";
+      doCheck = false; # exercised separately via checks.nextest
+    }
+  );
 
-      # Build only the cargo dependencies for caching
-      cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+  checks = {
+    clippy = craneLib.cargoClippy (
+      commonArgs
+      // {
+        inherit cargoArtifacts;
+        cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+      }
+    );
 
-    in
-    {
-      _module.args = {
-        inherit
-          stableToolchain
-          nightlyToolchain
-          coverageToolchain
-          craneLib
-          craneLibNightly
-          commonArgs
-          cargoArtifacts
-          ;
-      };
+    doc = craneLib.cargoDoc (
+      commonArgs
+      // {
+        inherit cargoArtifacts;
+        env.RUSTDOCFLAGS = "--deny warnings";
+      }
+    );
+
+    fmt = craneLib.cargoFmt { inherit src; };
+
+    audit = craneLib.cargoAudit {
+      inherit src;
+      inherit (inputs) advisory-db;
     };
+
+    nextest = craneLib.cargoNextest (
+      commonArgs
+      // {
+        inherit cargoArtifacts;
+        partitions = 1;
+        partitionType = "count";
+      }
+    );
+  };
+in
+{
+  inherit
+    craneLib
+    commonArgs
+    cargoArtifacts
+    package
+    checks
+    rustToolchain
+    ;
 }

@@ -19,7 +19,7 @@
         };
         rust = {
           path = ./templates/rust;
-          description = "Rust project with flake-parts, fenix, crane, treefmt, pre-commit";
+          description = "Rust CLI + lib with flake-parts, fenix, crane (incremental builds), treefmt-nix, and a justfile";
         };
         zig = {
           path = ./templates/zig;
